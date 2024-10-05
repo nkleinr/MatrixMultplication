@@ -1,0 +1,148 @@
+import java.io.*;
+import java.util.Scanner;
+
+public class MatrixMultiplication {
+
+    public static void main(String[] args) {
+        if (args.length == 2) {
+            // Assuming command line arguments are two file names
+            String file1 = args[0];
+            String file2 = args[1];
+            processFiles(file1, file2);
+        } else {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Enter two file names for matrices (or an integer for random matrices):");
+            String input1 = scanner.nextLine();
+            String input2 = scanner.nextLine();
+
+            try {
+                // Check if both inputs are valid file names
+                if (isFile(input1) && isFile(input2)) {
+                    processFiles(input1, input2);
+                } else {
+                    // Otherwise, try to parse them as integers
+                    int size1 = Integer.parseInt(input1);
+                    int size2 = Integer.parseInt(input2);
+                    generateAndMultiplyMatrices(size1, size2);
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter valid file names or integers.");
+            } finally {
+                scanner.close();
+            }
+        }
+    }
+
+    private static void processFiles(String file1, String file2) {
+        try {
+            int[][] matrixA = readMatrixFromFile(file1);
+            int[][] matrixB = readMatrixFromFile(file2);
+
+            if (matrixA[0].length != matrixB.length) {
+                System.out.println("Matrix multiplication requirements are not satisfied.");
+                return;
+            }
+
+            int[][] result = multiplyMatrices(matrixA, matrixB);
+            writeMatrixToFile(result, "matrix3.txt");
+            System.out.println("Matrix multiplication completed. Result saved to matrix3.txt.");
+        } catch (IOException e) {
+            System.out.println("Error reading files: " + e.getMessage());
+        }
+    }
+
+    private static void generateAndMultiplyMatrices(int size1, int size2) {
+        int[][] matrixA = generateRandomMatrix(size1);
+        int[][] matrixB = generateRandomMatrix(size2);
+
+        try {
+            writeMatrixToFile(matrixA, "matrix1.txt");
+            writeMatrixToFile(matrixB, "matrix2.txt");
+        } catch (IOException e) {
+            System.out.println("Error writing to files: " + e.getMessage());
+            return;
+        }
+
+        if (matrixA[0].length != matrixB.length) {
+            System.out.println("Matrix multiplication requirements are not satisfied.");
+            return;
+        }
+
+        int[][] result = multiplyMatrices(matrixA, matrixB);
+        try {
+            writeMatrixToFile(result, "matrix3.txt");
+            System.out.println("Matrix multiplication completed. Result saved to matrix3.txt.");
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+        }
+    }
+
+    private static int[][] readMatrixFromFile(String filename) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(filename));
+        String line;
+        int rows = 0;
+
+        while ((line = br.readLine()) != null) {
+            rows++;
+        }
+        br.close();
+
+        int[][] matrix = new int[rows][];
+        br = new BufferedReader(new FileReader(filename));
+        int currentRow = 0;
+
+        while ((line = br.readLine()) != null) {
+            String[] values = line.trim().split("\\s+");
+            matrix[currentRow] = new int[values.length];
+            for (int i = 0; i < values.length; i++) {
+                matrix[currentRow][i] = Integer.parseInt(values[i]);
+            }
+            currentRow++;
+        }
+        br.close();
+        return matrix;
+    }
+
+    private static void writeMatrixToFile(int[][] matrix, String filename) throws IOException {
+        BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
+        for (int[] row : matrix) {
+            for (int value : row) {
+                bw.write(value + " ");
+            }
+            bw.newLine();
+        }
+        bw.close();
+    }
+
+    private static int[][] generateRandomMatrix(int size) {
+        int[][] matrix = new int[size][size];
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                matrix[i][j] = (int) (Math.random() * 10); // Random integers between 0-9
+            }
+        }
+        return matrix;
+    }
+
+    private static int[][] multiplyMatrices(int[][] matrixA, int[][] matrixB) {
+        int rowsA = matrixA.length;
+        int colsA = matrixA[0].length;
+        int colsB = matrixB[0].length;
+
+        int[][] result = new int[rowsA][colsB];
+        for (int i = 0; i < rowsA; i++) {
+            for (int j = 0; j < colsB; j++) {
+                result[i][j] = 0;
+                for (int k = 0; k < colsA; k++) {
+                    result[i][j] += matrixA[i][k] * matrixB[k][j];
+                }
+            }
+        }
+        return result;
+    }
+
+    private static boolean isFile(String filename) {
+        File file = new File(filename);
+        return file.exists() && !file.isDirectory();
+    }
+}
